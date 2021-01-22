@@ -1,34 +1,69 @@
+
 import Navbar from "./components/Navbar";
-import Filters from "./components/Filters";
+import Search from "./pages/Search";
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import './App.css';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from "react-router-dom";
+import { useState } from "react";
+import { TokenContext } from "./context/TokenContext";
 
 
 function App() {
-  // const [rawdata, setRawData] = useState<Partial<Class>>({});
-
-  // useEffect(() => {
-  //   fetch("http://localhost:8080/rawdata")
-  //     .then(res => res.json())
-  //     .then((result) => {
-  //       setRawData(result);
-  //     })
-  // }, [])
+  const [token, setToken] = useState<string>("");
+  const [loggedinUser, setLoggedin] = useState<string>("");
 
 
   return (
-    <div className="App">
-      <pre style={{ textAlign: "left" }}>
-        {/* {JSON.stringify(rawdata, null, 2)} */}
-      </pre>
+    <TokenContext.Provider value={{ loggedinUser, setLoggedin, token, setToken}}>
+
+    <Router>
+
       <Navbar />
-      <div style={{display:"flex", flexDirection:"row", margin:100}}>
-      <Login />
-      <Register />
-      </div>
-      <Filters />
-    </div>
+      {token === "" &&        // if user is not logged in, use the following routes 
+          <Switch>
+            
+            <Route path="/register">
+              <Register />
+            </Route>
+
+            <Route path="/login">
+              <Login />
+            </Route>
+
+            <Route path="/">
+              <Redirect to="/login" />
+            </Route>
+
+          </Switch>
+      }
+
+        {token !== "" &&        // if the user is logged in, use these routes
+          <Switch>
+
+            <Route path="/search">
+              <Search />
+            </Route>
+
+          <Route path="/">
+            THE USER IS LOGGED IN AND USING THE LOGGED IN SWITCHES
+            this route hasn't been written yet o_O
+          </Route>
+
+          </Switch>
+        }
+
+
+
+
+    </Router>
+    </TokenContext.Provider>
+
   );
 }
 
