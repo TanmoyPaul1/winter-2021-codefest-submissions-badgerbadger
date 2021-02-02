@@ -1,50 +1,40 @@
 import createError from "http-errors";
+import jwt from "jsonwebtoken";
 
 import { Router } from "express";
-import { StatusCodes } from "http-status-codes";
 
-import { User, IUser } from "../../database/models";
+import config from "../../config";
 
-import handler from "../../utils/handler";
+import { UserModel } from "../../models/user.model";
 
-import jwt from "jsonwebtoken";
+import { handler } from "../../utils/handler";
+
+import { validate } from "../../validators/login.validator";
+
+const { accessToken, refreshToken } = config.get("jwt");
 
 const route = Router();
 
-const { JWT_SECRET } = process.env;
-
-if (!JWT_SECRET) {
-  throw new Error("Missing JWT_SECRET in environment");
-}
-
 route.post(
   "/login",
-  handler((req) => {
-    const { password, username } = req.body;
-
-    if (!password) {
-      throw new createError.BadRequest("You must input your password!");
-    }
-
-    if (!username) {
-      throw new createError.BadRequest("You must input your password!");
-    }
-  }),
   handler(async (req) => {
-    const { password, username } = req.body;
+    const { password, username } = await validate(req.body);
 
-    const user: IUser = await User.findOne({ username });
+    const user = await UserModel.findOne({ username });
 
     if (!user || !(await user.comparePassword(password))) {
       throw new createError.Unauthorized("Invalid login credentials");
     }
 
     return {
-      status: StatusCodes.OK,
-      token: jwt.sign({ username: user.username }, JWT_SECRET, {
-        algorithm: "HS512",
-        expiresIn: "1h",
+      accessToken: jwt.sign({ user: user.id }, accessToken.secret, {
+        algorithm: "HS512", // Do we really need sha 512?
+        expiresIn: accessToken.expiresIn
       }),
+      refreshToken: jwt.sign({ user: user.id }, refreshToken.secret, {
+        algorithm: "HS512",
+        expiresIn: refreshToken.expiresIn
+      })
     };
   })
 );

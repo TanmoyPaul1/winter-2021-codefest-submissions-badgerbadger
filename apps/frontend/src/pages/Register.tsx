@@ -1,12 +1,13 @@
 import { useState } from "react"
-
-
+import { useHistory } from "react-router-dom";
+import './Register.scss';
 
 export default function Login() {
 	const [username, setUsername] = useState<string>("");
 	const [password0, setPassword0] = useState<string>("");
 	const [password1, setPassword1] = useState<string>("");
 	const [message, setMessage] = useState<string>("");
+	let history = useHistory();
 
 	const register = (event: React.FormEvent<HTMLFormElement>): void => {
 		event.preventDefault();
@@ -34,18 +35,21 @@ export default function Login() {
 		})
 			.then(res => res.json())
 			.then(response => {
+				console.log(response);
 				if (response.status !== 200) {
+					console.log(response)	
 					return setMessage("SERVER ERROR");
+				} else {
+					history.push("/");
+					return setMessage("User created!")
 				}
-				return setMessage("User created!")
 			})
-		return setMessage("New user created!")
 
 
 	}
 
 	return (
-		<form onSubmit={register}>
+		<form className="register" onSubmit={register}>
 			THIS IS THE REGISTER FORM <br></br>
 			<label>Username<input type="text" name="username" id="" onChange={e => setUsername(e.target.value)} /></label>
 			<br></br>
